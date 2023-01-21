@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Feather } from "@expo/vector-icons"
 import colors from "tailwindcss/colors";
 
 import { BackButton } from "../components/BackButton";
 import { CheckBox } from "../components/CheckBox";
+import { api } from "../lib/axios";
 
 const availableWeekDays = [
   'Domingo',
@@ -17,6 +18,7 @@ const availableWeekDays = [
 ]
 
 export function New() {
+  const [title, setTitle] = useState('')
   const [weekDays, setWeekDays] = useState<number[]>([]);
 
   function handleToggleWeekDay(weekDayIndex: number) {
@@ -24,6 +26,23 @@ export function New() {
       setWeekDays(prevState => prevState.filter(weekDay => weekDay !== weekDayIndex));
     } else {
       setWeekDays(prevState => [...prevState, weekDayIndex]);
+    }
+  }
+
+  async function handleCrateNewHabit() {
+    try {
+      if (!title.trim() || !weekDays.length) {
+        Alert.alert('Novo hábito', 'Informe o nome do hábito e a recorrência!')
+      }
+      await api.post('/habits', { title, weekDays })
+
+      setTitle('')
+      setWeekDays([])
+
+      Alert.alert('Novo hábito', 'Hábito criado com sucesso!')
+    } catch (error) {
+      console.log(error)
+      Alert.alert('Ooops!', 'Não foi possível criar novo hábito')
     }
   }
 
@@ -47,6 +66,8 @@ export function New() {
           className="h-12 pl-4 rounded-lg mt-3 bg-zinc-900 border-2 border-zinc-800 text-white focus:border-green-600"
           placeholder="Exercícios, dormir bem, etc..."
           placeholderTextColor={colors.zinc[400]}
+          onChangeText={setTitle}
+          value={title}
         />
         <Text className="mt-4 mb-3 text-white font-semibold text-base">
           Qual a recorrência?
@@ -68,6 +89,7 @@ export function New() {
         <TouchableOpacity
           activeOpacity={0.}
           className="w-full h-14 flex-row items-center justify-center bg-green-600 rounded-md mt-6"
+          onPress={handleCrateNewHabit}
         >
           <Feather
             name="check"
